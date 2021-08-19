@@ -1,6 +1,7 @@
 // @flow
 'use strict'
 
+const colors = require('chalk')
 const fs = require('fs/promises')
 const path = require('path')
 const rollup = require('rollup')
@@ -11,6 +12,7 @@ const resolve = require('@rollup/plugin-node-resolve').default
 const mkdirp = require('mkdirp')
 const { program } = require('commander')
 const createPluginListing = require('./createPluginListing')
+
 const {
   getFolderFromCommandLine,
   getPluginFileContents,
@@ -39,12 +41,17 @@ const COMPACT = options.compact || false
 
 if (DEBUGGING && !COMPACT) {
   console.log(
-    `Running in DEBUG mode for purposes of seeing the Javascript script.js code exactly as it appears in your editor. This means no cleaning and no transpiling. Good for debugging, but bad for deployment to older machines. Make sure you run the autowatch command without the -debug flag before you release!\n`,
+    colors.yellow.bold(
+      `Running in DEBUG mode for purposes of seeing the Javascript script.js code exactly as it appears in your editor. This means no cleaning and no transpiling. Good for debugging, but bad for deployment to older machines. Make sure you run the autowatch command without the -debug flag before you release!\n`,
+    ),
   )
 }
 if (COMPACT) {
+  console.log('')
   console.log(
-    `Rollup autowatch running. Will use compact output when there are no errors\n`,
+    colors.green.bold(
+      `Rollup autowatch running. Will use compact output when there are no errors\n`,
+    ),
   )
 }
 let watcher
@@ -65,7 +72,9 @@ async function checkPluginList(pluginPaths) {
       pluginFile['plugin.commands']?.forEach((command) => {
         if (pluginCommands[command.name]) {
           console.log(
-            `\n!!!!\nCommand collison: "${command.name}" exists already!`,
+            colors.red.bold(
+              `\n!!!!\nCommand collison: "${command.name}" exists already!`,
+            ),
           )
           console.log(
             `\tTrying to add: "${command.name}" from ${path.basename(
@@ -73,9 +82,11 @@ async function checkPluginList(pluginPaths) {
             )}`,
           )
           console.log(
-            `\tConflicts with "${pluginCommands[command.name].name}" in ${
-              pluginCommands[command.name].folder
-            }\nCommand will be added & will work but should should be changed to be unique!!!\n`,
+            colors.yellow(
+              `\tConflicts with "${pluginCommands[command.name].name}" in ${
+                pluginCommands[command.name].folder
+              }\nCommand will be added & will work but should should be changed to be unique!!!\n`,
+            ),
           )
         } else {
           pluginCommands[command.name] = command
@@ -85,7 +96,9 @@ async function checkPluginList(pluginPaths) {
       })
     } else {
       console.log(
-        `^^^ checkPluginList: For some reason could not parse file at: ${pluginPath}`,
+        colors.red(
+          `^^^ checkPluginList: For some reason could not parse file at: ${pluginPath}`,
+        ),
       )
     }
   }
@@ -101,7 +114,9 @@ async function main() {
   )
   if (limitToFolders.length && !COMPACT) {
     console.log(
-      `\nWARNING: Keep in mind that if you are editing shared files used by other plugins that you could be affecting them by not rebuilding/testing them all here. You have been warned. :)\n`,
+      colors.yellow.bold(
+        `\nWARNING: Keep in mind that if you are editing shared files used by other plugins that you could be affecting them by not rebuilding/testing them all here. You have been warned. :)\n`,
+      ),
     )
   }
   const rootFolder = await fs.readdir(rootFolderPath, {
